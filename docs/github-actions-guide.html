@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Comprehensive Guide to GitHub Actions</title>
+  <style>
+    :root {
+      --primary: #0969da;
+      --primary-dark: #0550ae;
+      --primary-light: #ddf4ff;
+      --text-main: #1f2328;
+      --text-muted: #656d76;
+      --bg-main: #ffffff;
+      --bg-subtle: #f6f8fa;
+      --border-color: #d0d7de;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --badge-bg: #e1f0ff;
+      --badge-text: #0969da;
+      --callout-bg: #f0f7ff;
+      --callout-border: #54aeff;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--text-main);
+      background-color: var(--bg-main);
+      line-height: 1.65;
+      font-size: 16px;
+    }
+
+    /* Layout */
+    .container {
+      display: flex;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      gap: 40px;
+    }
+
+    /* Sidebar / Sticky TOC */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 30px;
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
+      padding-right: 15px;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .sidebar h3 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      margin-bottom: 8px;
+    }
+
+    .sidebar a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+
+    /* Main Content */
+    .content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hero-header {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 35px;
+    }
+
+    .hero-header .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    ul, ol {
+      margin-bottom: 16px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-subtle);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafbfc;
+    }
+
+    /* Code & Pre */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background-color: var(--bg-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 16px 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 18px 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: inherit;
+    }
+
+    /* Syntax Highlighting Fake Accents */
+    .kwd { color: #f38ba8; font-weight: 600; }  /* keys */
+    .str { color: #a6e3a1; }                    /* strings */
+    .com { color: #6c7086; font-style: italic; }/* comments */
+    .var { color: #f9e2af; }                    /* variables */
+
+    /* Callout Boxes */
+    .callout {
+      background-color: var(--callout-bg);
+      border-left: 4px solid var(--callout-border);
+      padding: 16px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+
+    .callout-title {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Architecture ASCII diagram styling */
+    .diagram-box {
+      background-color: #0d1117;
+      color: #79c0ff;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 18px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 20px;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <h3>Documentation</h3>
+      <ul>
+        <li><a href="#what-is-github-actions">1. What is GitHub Actions?</a></li>
+        <li><a href="#why-use-github-actions">2. Why Use GitHub Actions?</a></li>
+        <li><a href="#core-architecture">3. Core Architecture</a></li>
+        <li><a href="#folder-structure">4. Folder Structure Standards</a></li>
+        <li><a href="#important-terms">5. Important Terms & Glossary</a></li>
+        <li><a href="#syntax-cheat-sheet">6. Workflow Syntax Cheat Sheet</a></li>
+        <li><a href="#secrets-and-environments">7. Secrets & Environments</a></li>
+        <li><a href="#advanced-patterns">8. Matrix Builds & Caching</a></li>
+        <li><a href="#best-practices">9. Best Practices & Security</a></li>
+        <li><a href="#quick-reference">10. Quick Reference</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Article Content -->
+    <main class="content">
+      <header class="hero-header">
+        <span class="badge">Mastery Guide</span>
+        <h1>The Comprehensive Guide to GitHub Actions</h1>
+        <p class="lead">Everything you need to know about GitHub Actions: architecture, folder structure, terminology, syntax directives, and real-world CI/CD patterns.</p>
+      </header>
+
+      <!-- Section 1 -->
+      <section id="what-is-github-actions">
+        <h2>1. What is GitHub Actions?</h2>
+        <p><strong>GitHub Actions</strong> is an event-driven automation platform natively built into GitHub. It empowers software engineering teams to automate, customize, and execute software development workflows right where their code lives.</p>
+        <p>While GitHub Actions is most famous for powering <strong>Continuous Integration (CI)</strong> and <strong>Continuous Delivery/Deployment (CD)</strong>, it can automate virtually any activity across the GitHub development lifecycle:</p>
+        <ul>
+          <li>Running automated unit, integration, and end-to-end test suites on Pull Requests.</li>
+          <li>Linting and code formatting checks (e.g. ESLint, Prettier, Black, Flake8).</li>
+          <li>Deploying applications to cloud providers (AWS, Azure, Google Cloud, Vercel, Netlify).</li>
+          <li>Publishing packages to registries like npm, PyPI, or Docker Hub.</li>
+          <li>Automating repository chores (triaging issues, auto-merging approved PRs, pruning stale branches).</li>
+        </ul>
+      </section>
+
+      <!-- Section 2 -->
+      <section id="why-use-github-actions">
+        <h2>2. Why Use GitHub Actions?</h2>
+        <p>Traditionally, teams had to provision third-party CI/CD servers (like Jenkins, Travis CI, or CircleCI), set up complex webhook integrations, and manage separate billing. GitHub Actions eliminated this friction:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Why It Matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Native GitHub Integration</strong></td>
+              <td>No external accounts or webhook tokens. Status checks appear seamlessly inside your Pull Request reviews.</td>
+            </tr>
+            <tr>
+              <td><strong>Event-Driven Triggers</strong></td>
+              <td>Can trigger on code pushes, PR creation, schedule (cron), release tags, issue comments, or manual UI clicks.</td>
+            </tr>
+            <tr>
+              <td><strong>Massive Marketplace</strong></td>
+              <td>Over 20,000+ ready-to-use community and official actions for Docker, AWS, Node, Python, Slack notifications, etc.</td>
+            </tr>
+            <tr>
+              <td><strong>Matrix Builds</strong></td>
+              <td>Test across multiple OS platforms (Ubuntu, Windows, macOS) and runtime versions in parallel with minimal code.</td>
+            </tr>
+            <tr>
+              <td><strong>Generous Free Tier</strong></td>
+              <td>Completely free for public open-source repos, with generous free monthly minutes for private repositories.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section 3 -->
+      <section id="core-architecture">
+        <h2>3. How GitHub Actions Works (Core Architecture)</h2>
+        <p>GitHub Actions uses a strict hierarchical structure to execute automated pipelines:</p>
+
+        <div class="diagram-box">
+┌────────────────────────────────────────────────────────┐
+│                        EVENT                           │
+│        (e.g., git push, pull_request, cron)            │
+└───────────────────────────┬────────────────────────────┘
+                            │ triggers
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                       WORKFLOW                         │
+│             (.github/workflows/*.yml)                  │
+└───────────────────────────┬────────────────────────────┘
+                            │ contains one or more
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                         JOBS                           │
+│          (Run in parallel by default on a Runner)      │
+│   ┌─────────────────────┐    ┌─────────────────────┐   │
+│   │     Job 1: Lint     │    │     Job 2: Test     │   │
+│   └──────────┬──────────┘    └──────────┬──────────┘   │
+└──────────────┼──────────────────────────┼──────────────┘
+               │                          │
+               ▼                          ▼
+┌────────────────────────────────────────────────────────┐
+│                        RUNNER                          │
+│     (A virtual machine: ubuntu, windows, or macos)     │
+└──────────────────────────┬─────────────────────────────┘
+                           │ executes
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│                        STEPS                           │
+│     (Tasks executed sequentially inside the runner)    │
+│   1. Run action: actions/checkout@v4                   │
+│   2. Run action: actions/setup-node@v4                 │
+│   3. Run shell command: npm install                    │
+│   4. Run shell command: npm test                       │
+└────────────────────────────────────────────────────────┘
+        </div>
+
+        <p>When an event occurs, GitHub evaluates your repository's workflow files. For matching events, it queues the workflow, spins up runner machines, and executes the defined steps sequentially.</p>
+      </section>
+
+      <!-- Section 4 -->
+      <section id="folder-structure">
+        <h2>4. Folder Structure & Convention Standards</h2>
+        <p>GitHub Actions strictly requires workflow files to be placed in a specific root directory. Any file outside this directory will be ignored by GitHub's workflow engine.</p>
+
+        <pre><code>my-project/
+│
+├── <span class="kwd">.github/</span>                       <span class="com"># Must be in the root directory (leading dot)</span>
+│   ├── <span class="kwd">workflows/</span>                 <span class="com"># Plural "workflows" folder containing YAML files</span>
+│   │   ├── <span class="str">ci.yml</span>                 <span class="com"># Test & validation pipeline</span>
+│   │   ├── <span class="str">deploy.yml</span>             <span class="com"># Production deployment pipeline</span>
+│   │   └── <span class="str">code-quality.yml</span>       <span class="com"># Linting & security audit pipeline</span>
+│   │
+│   └── <span class="kwd">actions/</span>                   <span class="com"># (Optional) Custom local composite actions</span>
+│       └── setup-environment/
+│           └── action.yml
+│
+├── src/                           <span class="com"># Your application source code</span>
+├── test/                          <span class="com"># Automated tests</span>
+└── package.json</code></pre>
+
+        <div class="callout">
+          <div class="callout-title">📌 Folder Convention Rules:</div>
+          <p>1. Must start with a dot: <code>.github</code>.<br>
+          2. The child directory must be named <code>workflows</code> (plural, not <em>workflow</em>).<br>
+          3. Files must have either <code>.yml</code> or <code>.yaml</code> extensions.<br>
+          4. You can have as many distinct workflow files as you need.</p>
+        </div>
+      </section>
+
+      <!-- Section 5 -->
+      <section id="important-terms">
+        <h2>5. Important Terms & Core Concepts</h2>
+
+        <h3>1. Workflow</h3>
+        <p>A configurable automated procedure defined in a single YAML file inside <code>.github/workflows/</code>. It contains one or more jobs and is initiated by events.</p>
+
+        <h3>2. Event (<code>on:</code>)</h3>
+        <p>The specific activity that tells GitHub Actions to trigger the workflow. Common examples: <code>push</code>, <code>pull_request</code>, <code>schedule</code>, <code>workflow_dispatch</code> (manual button).</p>
+
+        <h3>3. Job</h3>
+        <p>A set of steps that execute on the <strong>same runner machine</strong>. Multiple jobs in a workflow execute <strong>in parallel</strong> by default, unless configured with <code>needs: [other_job]</code>.</p>
+
+        <h3>4. Runner</h3>
+        <p>A virtual or physical server running the GitHub Actions runner application. Options include:
+          <ul>
+            <li><strong>GitHub-Hosted Runners</strong>: Managed, isolated VMs provided by GitHub (e.g., <code>ubuntu-latest</code>, <code>windows-latest</code>, <code>macos-latest</code>).</li>
+            <li><strong>Self-Hosted Runners</strong>: Custom virtual machines or hardware hosted in your private cloud or on-premise infrastructure.</li>
+          </ul>
+        </p>
+
+        <h3>5. Step</h3>
+        <p>An individual execution unit within a job. Steps run sequentially inside the runner. A step can execute a shell command (<code>run:</code>) or an existing action (<code>uses:</code>).</p>
+
+        <h3>6. Action</h3>
+        <p>A reusable, modular building block that performs complex setup or logic (e.g. <code>actions/checkout@v4</code>, <code>actions/setup-node@v4</code>). Sourced from the GitHub Marketplace or written locally.</p>
+
+        <h3>7. Contexts & Expressions</h3>
+        <p>Dynamic variables and expressions evaluated at runtime using the <code>${{ &lt;expression&gt; }}</code> syntax (e.g. <code>${{ github.ref }}</code>, <code>${{ secrets.API_KEY }}</code>).</p>
+
+        <h3>8. Artifacts</h3>
+        <p>Files, binaries, or logs generated by a job that are preserved after the virtual machine runner is torn down.</p>
+      </section>
+
+      <!-- Section 6 -->
+      <section id="syntax-cheat-sheet">
+        <h2>6. Workflow Syntax & Directives Cheat Sheet</h2>
+        <p>Here is an annotated production-ready workflow template demonstrating the primary keys:</p>
+
+        <pre><code><span class="com"># Workflow Name</span>
+<span class="kwd">name</span>: <span class="str">Full CI/CD Pipeline</span>
+
+<span class="com"># Triggers</span>
+<span class="kwd">on</span>:
+  <span class="kwd">push</span>:
+    <span class="kwd">branches</span>: [ <span class="str">"main"</span> ]
+    <span class="kwd">paths-ignore</span>:
+      - <span class="str">'**.md'</span>                <span class="com"># Don't trigger if only documentation changed</span>
+  <span class="kwd">pull_request</span>:
+    <span class="kwd">branches</span>: [ <span class="str">"main"</span> ]
+  <span class="kwd">workflow_dispatch</span>:           <span class="com"># Manual trigger button in GitHub UI</span>
+
+<span class="com"># Environment Variables</span>
+<span class="kwd">env</span>:
+  <span class="kwd">NODE_ENV</span>: <span class="str">test</span>
+
+<span class="com"># Jobs list</span>
+<span class="kwd">jobs</span>:
+  <span class="com"># Job 1: Lint & Unit Tests</span>
+  <span class="kwd">build-and-test</span>:
+    <span class="kwd">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="kwd">timeout-minutes</span>: <span class="var">15</span>        <span class="com"># Prevent stuck processes from consuming minutes</span>
+
+    <span class="kwd">steps</span>:
+      - <span class="kwd">name</span>: <span class="str">Check out repository code</span>
+        <span class="kwd">uses</span>: <span class="str">actions/checkout@v4</span>
+
+      - <span class="kwd">name</span>: <span class="str">Set up Node.js</span>
+        <span class="kwd">uses</span>: <span class="str">actions/setup-node@v4</span>
+        <span class="kwd">with</span>:
+          <span class="kwd">node-version</span>: <span class="var">20</span>
+          <span class="kwd">cache</span>: <span class="str">'npm'</span>
+
+      - <span class="kwd">name</span>: <span class="str">Install dependencies</span>
+        <span class="kwd">run</span>: <span class="str">npm ci</span>
+
+      - <span class="kwd">name</span>: <span class="str">Run test suite</span>
+        <span class="kwd">run</span>: <span class="str">npm test</span>
+
+  <span class="com"># Job 2: Deployment (Only executes after Job 1 succeeds)</span>
+  <span class="kwd">deploy</span>:
+    <span class="kwd">needs</span>: [ <span class="str">build-and-test</span> ]   <span class="com"># Dependency requirement</span>
+    <span class="kwd">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="kwd">if</span>: <span class="var">github.ref == 'refs/heads/main'</span>  <span class="com"># Condition: only on main branch</span>
+
+    <span class="kwd">steps</span>:
+      - <span class="kwd">name</span>: <span class="str">Deploy application</span>
+        <span class="kwd">run</span>: <span class="str">echo "Deploying to production server..."</span></code></pre>
+      </section>
+
+      <!-- Section 7 -->
+      <section id="secrets-and-environments">
+        <h2>7. Secrets, Variables & Environments</h2>
+        <p>Security is critical in continuous delivery. Sensitive credentials must never be committed to repository code or plaintext YAML.</p>
+
+        <h3>Managing Repository Secrets</h3>
+        <ol>
+          <li>Open your repository on GitHub.</li>
+          <li>Go to <strong>Settings</strong> &rarr; <strong>Secrets and variables</strong> &rarr; <strong>Actions</strong>.</li>
+          <li>Click <strong>New repository secret</strong> (e.g. <code>DATABASE_URL</code>, <code>AWS_ACCESS_KEY_ID</code>).</li>
+          <li>Inject secrets securely into steps:</li>
+        </ol>
+
+        <pre><code>- <span class="kwd">name</span>: <span class="str">Deploy with Secret</span>
+  <span class="kwd">env</span>:
+    <span class="kwd">DB_URL</span>: <span class="var">${{ secrets.DATABASE_URL }}</span>
+  <span class="kwd">run</span>: <span class="str">./deploy-script.sh</span></code></pre>
+
+        <h3>Automatic <code>GITHUB_TOKEN</code></h3>
+        <p>GitHub automatically generates a temporary token for every workflow run. You can configure granular permissions for this token to restrict API access:</p>
+        <pre><code><span class="kwd">permissions</span>:
+  <span class="kwd">contents</span>: <span class="str">read</span>
+  <span class="kwd">pull-requests</span>: <span class="str">write</span></code></pre>
+      </section>
+
+      <!-- Section 8 -->
+      <section id="advanced-patterns">
+        <h2>8. Advanced Patterns: Matrix Builds & Caching</h2>
+
+        <h3>Matrix Builds (Parallel Multi-Version Testing)</h3>
+        <p>A matrix strategy allows you to test multiple versions of runtimes and OS platforms with a single job declaration:</p>
+        <pre><code><span class="kwd">strategy</span>:
+  <span class="kwd">matrix</span>:
+    <span class="kwd">os</span>: [<span class="str">ubuntu-latest</span>, <span class="str">windows-latest</span>]
+    <span class="kwd">node-version</span>: [<span class="str">18.x</span>, <span class="str">20.x</span>, <span class="str">22.x</span>]
+
+<span class="kwd">runs-on</span>: <span class="var">${{ matrix.os }}</span>
+<span class="kwd">steps</span>:
+  - <span class="kwd">uses</span>: <span class="str">actions/checkout@v4</span>
+  - <span class="kwd">uses</span>: <span class="str">actions/setup-node@v4</span>
+    <span class="kwd">with</span>:
+      <span class="kwd">node-version</span>: <span class="var">${{ matrix.node-version }}</span>
+  - <span class="kwd">run</span>: <span class="str">npm test</span></code></pre>
+        <p><em>(The above snippet automatically runs 6 parallel jobs simultaneously: 2 OS &times; 3 Node versions!)</em></p>
+
+        <h3>Dependency Caching</h3>
+        <p>Use <code>actions/cache</code> or the built-in cache parameter in <code>actions/setup-node</code> (<code>cache: 'npm'</code>) to skip redundant downloads of <code>node_modules</code> between runs.</p>
+      </section>
+
+      <!-- Section 9 -->
+      <section id="best-practices">
+        <h2>9. Best Practices & Security Rules</h2>
+        <ul>
+          <li><strong>Set Timeouts</strong>: Always add <code>timeout-minutes</code> to avoid stuck jobs consuming all your billing minutes.</li>
+          <li><strong>Enforce Least Privilege</strong>: Declare minimal <code>permissions:</code> for your workflows.</li>
+          <li><strong>Use <code>npm ci</code> in CI</strong>: Never use <code>npm install</code> in automated workflows; <code>npm ci</code> guarantees exact lockfile consistency.</li>
+          <li><strong>Filter Triggers with <code>paths-ignore</code></strong>: Prevent wasting CI minutes when only markdown or documentation files are updated.</li>
+          <li><strong>Pin Actions Securely</strong>: In sensitive environments, pin actions using their full commit SHA instead of general tags.</li>
+        </ul>
+      </section>
+
+      <!-- Section 10 -->
+      <section id="quick-reference">
+        <h2>10. Summary & Quick Reference</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Directive</th>
+              <th>Type</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>name:</code></td>
+              <td>String</td>
+              <td>Title displayed in GitHub Actions UI</td>
+            </tr>
+            <tr>
+              <td><code>on:</code></td>
+              <td>Event / Array</td>
+              <td>Defines trigger events (<code>push</code>, <code>pull_request</code>, etc.)</td>
+            </tr>
+            <tr>
+              <td><code>runs-on:</code></td>
+              <td>String</td>
+              <td>Virtual machine OS (<code>ubuntu-latest</code>, <code>windows-latest</code>)</td>
+            </tr>
+            <tr>
+              <td><code>strategy.matrix:</code></td>
+              <td>Object</td>
+              <td>Defines matrix permutations to run in parallel</td>
+            </tr>
+            <tr>
+              <td><code>needs:</code></td>
+              <td>Array</td>
+              <td>Forces a job to wait for prerequisite jobs to pass</td>
+            </tr>
+            <tr>
+              <td><code>uses:</code></td>
+              <td>String</td>
+              <td>Executes a prebuilt action from the Marketplace</td>
+            </tr>
+            <tr>
+              <td><code>run:</code></td>
+              <td>String / Script</td>
+              <td>Executes shell commands on the runner VM</td>
+            </tr>
+            <tr>
+              <td><code>with:</code></td>
+              <td>Map</td>
+              <td>Input parameters passed to a prebuilt action</td>
+            </tr>
+            <tr>
+              <td><code>env:</code></td>
+              <td>Map</td>
+              <td>Sets environment variables for job or step</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
