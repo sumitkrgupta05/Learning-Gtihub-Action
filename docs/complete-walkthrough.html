@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Project Walkthrough: Node.js CI/CD with GitHub Actions</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* Top Sticky Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      list-style: none;
+      overflow-x: auto;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    /* Header */
+    .hero {
+      text-align: center;
+      margin-bottom: 45px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--primary-light);
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+
+    /* Section styling */
+    section {
+      margin-bottom: 50px;
+      scroll-margin-top: 80px;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 20px 0 10px 0;
+    }
+
+    p { margin-bottom: 16px; }
+
+    ul, ol {
+      margin-bottom: 18px;
+      padding-left: 24px;
+    }
+
+    li { margin-bottom: 8px; }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    /* Steps cards */
+    .step-card {
+      border-left: 4px solid var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .step-header {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      color: var(--primary-dark);
+    }
+
+    /* Code blocks */
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 16px 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background-color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* Diagram */
+    .diagram-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 18px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    /* Links & Buttons */
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: var(--primary-dark); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: #f1f5f9; }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Navbar -->
+  <nav class="navbar">
+    <a href="#" class="nav-brand">⚡ CI/CD Walkthrough</a>
+    <ul class="nav-links">
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#evolution">Evolution</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#testing-pc">Test on PC</a></li>
+      <li><a href="#manual-workflows">Manual Tests</a></li>
+      <li><a href="#verification">Verification</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <span class="badge">Project Documentation</span>
+      <h1>Complete Project Walkthrough</h1>
+      <p class="subtitle">A full operational breakdown of the automated Node.js CI/CD pipeline deployed to GitHub Pages.</p>
+      
+      <div class="button-group" style="justify-content: center; margin-top: 20px;">
+        <a href="https://sumitkrgupta05.github.io/Learning-Gtihub-Action/" target="_blank" class="btn">🌐 Open Live Website</a>
+        <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action" target="_blank" class="btn btn-secondary">🐙 GitHub Repo</a>
+        <a href="./github-actions-guide.html" class="btn btn-secondary">📖 Actions Guide</a>
+      </div>
+    </header>
+
+    <!-- Section 1 -->
+    <section id="summary">
+      <h2>1. Executive Summary & What We Built</h2>
+      <div class="card">
+        <p>In this project, we built a fully autonomous <strong>Continuous Integration and Continuous Deployment (CI/CD)</strong> pipeline for a Node.js web application:</p>
+        <ul>
+          <li><strong>Zero-Dependency Core App</strong>: Arithmetic module (<code>src/math.js</code>) and CLI script (<code>src/index.js</code>).</li>
+          <li><strong>Native Automated Tests</strong>: Tests verifying regular and edge-case behavior (<code>test/math.test.js</code>) using Node's built-in <code>node:test</code> runner.</li>
+          <li><strong>Production Build Script</strong>: Compiles static assets and injects build metadata into <code>dist/</code> (<code>scripts/build.js</code>).</li>
+          <li><strong>Live Frontend Dashboard</strong>: Interactive web calculator and deployment status widget (<code>public/index.html</code>).</li>
+          <li><strong>3-Stage CI/CD Pipeline</strong>: Configured in <code>.github/workflows/ci.yml</code> to run <strong>Test (CI)</strong> ➔ <strong>Build</strong> ➔ <strong>Deploy (CD)</strong> on every commit and PR.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="evolution">
+      <h2>2. Step-by-Step Evolution of the Project</h2>
+
+      <div class="card step-card">
+        <div class="step-header">Phase 1: Project Foundation & Code Creation</div>
+        <p>Created the math module with error handling for division by zero and created 5 unit tests utilizing Node 18+'s native assertion library.</p>
+      </div>
+
+      <div class="card step-card">
+        <div class="step-header">Phase 2: First GitHub Actions Workflow</div>
+        <p>Added <code>.github/workflows/ci.yml</code> configured with a parallel matrix across Node versions 18, 20, and 22 on Ubuntu virtual machines.</p>
+      </div>
+
+      <div class="card step-card">
+        <div class="step-header">Phase 3: Comprehensive Reference Documentation</div>
+        <p>Authored in-depth guides in both Markdown and responsive HTML format (<code>docs/github-actions-guide.html</code>) covering GitHub Actions terminology, syntax, and security rules.</p>
+      </div>
+
+      <div class="card step-card">
+        <div class="step-header">Phase 4: Adding Continuous Deployment (CD)</div>
+        <p>Implemented a frontend dashboard in <code>public/index.html</code>, a build script in <code>scripts/build.js</code>, and extended the workflow to deploy to GitHub Pages automatically.</p>
+      </div>
+
+      <div class="card step-card" style="border-left-color: #f59e0b;">
+        <div class="step-header">Phase 5: Cross-Platform Linux Shell Bug & Resolution</div>
+        <p><strong>Bug Encountered</strong>: In <code>package.json</code>, the test command was written as <code>node --test test/**/*.test.js</code>. While Windows PowerShell tolerated this glob, Ubuntu Linux non-interactive <code>/bin/sh</code> does not support recursive globbing without subdirectories, causing the test runner to fail.<br>
+        <strong>Safety Guardrail Verified</strong>: GitHub Actions correctly refused to run the build and deploy jobs when the test failed!<br>
+        <strong>Fix</strong>: Switched command to <code>node --test</code>, which leverages Node's built-in cross-platform test discovery. All jobs turned green, and the site deployed successfully.</p>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="architecture">
+      <h2>3. How the Autonomous CI/CD Pipeline Operates</h2>
+      <p>The workflow file at <code>.github/workflows/ci.yml</code> orchestrates the automated lifecycle:</p>
+
+      <div class="diagram-box">
+Developer runs: git push origin main
+                  │
+                  ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 1: Continuous Integration (CI) - Automated Tests│
+│  Matrix: Node 18.x | Node 20.x | Node 22.x             │
+│  - actions/checkout@v4                                 │
+│  - actions/setup-node@v4                               │
+│  - npm test                                            │
+│  - npm start                                           │
+└─────────────────────────┬──────────────────────────────┘
+                          │ (All 3 matrix jobs pass ✅)
+                          ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 2: Build Web Application                        │
+│  - Runs on ubuntu-latest with Node.js 20               │
+│  - npm run build                                       │
+│  - actions/upload-pages-artifact@v3 (path: ./dist)     │
+└─────────────────────────┬──────────────────────────────┘
+                          │ (Build succeeds ✅)
+                          ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 3: Continuous Deployment (CD) - Deploy Pages    │
+│  - actions/deploy-pages@v4                             │
+│  - Environment: github-pages                           │
+└─────────────────────────┬──────────────────────────────┘
+                          │
+                          ▼
+        🌐 Live URL is updated automatically!
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="testing-pc">
+      <h2>4. How Any User Can Test This on Their PC</h2>
+      <div class="card">
+        <p>Anyone can clone and test this repository on their personal computer with zero configuration:</p>
+
+        <h3>Step 1: Clone the Repository</h3>
+        <pre><code>git clone https://github.com/sumitkrgupta05/Learning-Gtihub-Action.git
+cd Learning-Gtihub-Action</code></pre>
+
+        <h3>Step 2: Run Unit Tests</h3>
+        <pre><code>npm test</code></pre>
+
+        <h3>Step 3: Run the CLI Entry Point</h3>
+        <pre><code>npm start</code></pre>
+
+        <h3>Step 4: Generate the Production Build</h3>
+        <pre><code>npm run build</code></pre>
+
+        <h3>Step 5: View the Web App</h3>
+        <p>Double-click <code>dist/index.html</code> (or <code>public/index.html</code>) to open it in your browser.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="manual-workflows">
+      <h2>5. Manual Testing Workflows</h2>
+
+      <div class="card">
+        <h3>A. Manual Run from the GitHub UI</h3>
+        <ol>
+          <li>Visit the <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action/actions" target="_blank">Actions Tab</a>.</li>
+          <li>Click <strong>"CI/CD Pipeline"</strong> on the left sidebar.</li>
+          <li>Click the <strong>"Run workflow"</strong> dropdown button on the right.</li>
+          <li>Select branch <code>main</code> and click <strong>"Run workflow"</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>B. Testing Failure Prevention</h3>
+        <ol>
+          <li>Open <code>test/math.test.js</code> and change an expected value to an incorrect number.</li>
+          <li>Commit and push to a child branch.</li>
+          <li>Open a Pull Request on GitHub.</li>
+          <li>Notice how GitHub Actions flags the PR with a red cross ❌ and blocks deployment.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="verification">
+      <h2>6. Observing Autonomous Execution on GitHub</h2>
+      <div class="card">
+        <ul>
+          <li><strong>Actions Tab</strong>: <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action/actions" target="_blank">github.com/sumitkrgupta05/Learning-Gtihub-Action/actions</a> &mdash; inspect live step-by-step logs.</li>
+          <li><strong>Deployments Dashboard</strong>: <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action/deployments" target="_blank">github.com/sumitkrgupta05/Learning-Gtihub-Action/deployments</a> &mdash; view active GitHub Pages releases.</li>
+          <li><strong>Live Website URL</strong>: <a href="https://sumitkrgupta05.github.io/Learning-Gtihub-Action/" target="_blank">sumitkrgupta05.github.io/Learning-Gtihub-Action/</a> &mdash; see changes live in production!</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
