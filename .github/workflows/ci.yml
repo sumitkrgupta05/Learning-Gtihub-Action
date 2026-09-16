@@ -1,47 +1,100 @@
-# The name of the workflow as it appears in the GitHub Actions tab
-name: Node.js CI
+name: CI/CD Pipeline
 
 # Defines the events that trigger this workflow
 on:
-  # Trigger whenever code is pushed to 'main' or 'master' branch
+  # Trigger on push to main (including when a Pull Request is merged into main!)
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
-  # Trigger whenever a Pull Request targeting 'main' or 'master' is opened or updated
+  # Trigger on Pull Requests targeting main (tests code before merging)
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
-  # Allows you to manually trigger the workflow from the GitHub "Actions" UI tab
+  # Allows manual triggering from the GitHub Actions UI
   workflow_dispatch:
 
-# Defines the jobs that will run as part of this workflow
+# Grant GitHub Pages deployment permissions
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
+  # ------------------------------------------------------------
+  # STAGE 1: Continuous Integration (CI) - Automated Tests
+  # ------------------------------------------------------------
   test:
-    name: Test on Node ${{ matrix.node-version }}
-    # The operating system virtual machine to run the job on
+    name: Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
-    # Matrix strategy: runs this job multiple times in parallel across different Node versions
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
 
-    # The sequence of tasks (steps) to execute in this job
     steps:
-      # Step 1: Check out your repository code into the runner VM
-      - name: Check out repository code
+      - name: Checkout repository code
         uses: actions/checkout@v4
 
-      # Step 2: Install and configure the specified Node.js version
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
-      # Step 3: Run the automated unit tests
       - name: Run unit tests
         run: npm test
 
-      # Step 4: Verify the application starts without crashing
-      - name: Run application entrypoint
+      - name: Verify CLI entry point
         run: npm start
+
+  # ------------------------------------------------------------
+  # STAGE 2: Build & Package Web Application
+  # ------------------------------------------------------------
+  build:
+    name: Build Web App
+    needs: [test] # Only builds if all test matrix jobs pass!
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build static site
+        run: npm run build
+        env:
+          NODE_ENV: production
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  # ------------------------------------------------------------
+  # STAGE 3: Continuous Deployment (CD) - Deploy to Server
+  # ------------------------------------------------------------
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [build] # Only deploys if build succeeds!
+    # Deploy ONLY when code is pushed/merged to the main branch
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live CI/CD Demo - GitHub Actions</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--success-light);
+      color: var(--success);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pulsing-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Pipeline Diagram */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 15px;
+    }
+
+    .stage {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .stage-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .stage-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Interactive Calculator */
+    .calc-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    input, select, button {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    input {
+      width: 130px;
+      background: #fff;
+    }
+
+    select {
+      background: #fff;
+      cursor: pointer;
+    }
+
+    button.primary-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button.primary-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .result-box {
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+    }
+
+    /* Metadata table */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 0.95rem;
+    }
+
+    .meta-item {
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .meta-val {
+      font-weight: 600;
+      font-family: monospace;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    /* Action Links */
+    .links-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .btn-outline {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-live">
+        <span class="pulsing-dot"></span> Live Deployment Active
+      </div>
+      <h1>Continuous Deployment Demo</h1>
+      <p class="subtitle">Automatically built and deployed by GitHub Actions on every push to <code>main</code>.</p>
+    </header>
+
+    <!-- Pipeline Visualizer -->
+    <div class="card">
+      <h2>🚀 Live CI/CD Pipeline Stages</h2>
+      <div class="pipeline-grid">
+        <div class="stage" style="border-left-color: #16a34a;">
+          <div class="stage-title">1. Test (CI) ✅</div>
+          <div class="stage-desc">Runs Node.js unit tests in parallel matrix (Node 18, 20, 22).</div>
+        </div>
+        <div class="stage" style="border-left-color: #2563eb;">
+          <div class="stage-title">2. Build 📦</div>
+          <div class="stage-desc">Generates production web bundle and artifacts in <code>dist/</code>.</div>
+        </div>
+        <div class="stage" style="border-left-color: #9333ea;">
+          <div class="stage-title">3. Deploy (CD) 🌐</div>
+          <div class="stage-desc">Publishes live website to GitHub Pages automatically.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Math Testing -->
+    <div class="card">
+      <h2>🧮 Interactive App Verification</h2>
+      <p style="margin-bottom: 14px; font-size: 0.95rem; color: var(--text-muted);">
+        Test the arithmetic functions from <code>src/math.js</code> live right here in the browser:
+      </p>
+      <div class="calc-row">
+        <input type="number" id="numA" value="10" placeholder="Number A">
+        <select id="operation">
+          <option value="add">+</option>
+          <option value="subtract">−</option>
+          <option value="multiply">×</option>
+          <option value="divide">÷</option>
+        </select>
+        <input type="number" id="numB" value="5" placeholder="Number B">
+        <button class="primary-btn" onclick="calculate()">Calculate</button>
+      </div>
+      <div class="result-box" id="result">
+        Result: 10 + 5 = 15
+      </div>
+    </div>
+
+    <!-- Deployment Metadata -->
+    <div class="card">
+      <h2>ℹ️ Deployment Details</h2>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Target Branch</div>
+          <div class="meta-val" id="branchName">main</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Deploy Trigger</div>
+          <div class="meta-val">Automatic (git push)</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Commit SHA</div>
+          <div class="meta-val" id="commitSha">latest</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Build Timestamp</div>
+          <div class="meta-val" id="buildTime">Loading...</div>
+        </div>
+      </div>
+
+      <div class="links-row">
+        <a href="./guide.html" class="btn-outline">📖 Read Full GitHub Actions Guide</a>
+        <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action" target="_blank" class="btn-outline">🐙 View GitHub Repository</a>
+        <a href="https://github.com/sumitkrgupta05/Learning-Gtihub-Action/actions" target="_blank" class="btn-outline">⚡ Inspect Actions Runs</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculate() {
+      const a = parseFloat(document.getElementById('numA').value);
+      const b = parseFloat(document.getElementById('numB').value);
+      const op = document.getElementById('operation').value;
+      const resElem = document.getElementById('result');
+
+      if (isNaN(a) || isNaN(b)) {
+        resElem.innerText = 'Please enter valid numbers';
+        return;
+      }
+
+      let res, symbol;
+      switch (op) {
+        case 'add': res = a + b; symbol = '+'; break;
+        case 'subtract': res = a - b; symbol = '-'; break;
+        case 'multiply': res = a * b; symbol = '×'; break;
+        case 'divide':
+          if (b === 0) {
+            resElem.innerText = 'Error: Cannot divide by zero!';
+            return;
+          }
+          res = a / b;
+          symbol = '÷';
+          break;
+      }
+      resElem.innerText = `Result: ${a} ${symbol} ${b} = ${res}`;
+    }
+
+    // Load build info if available
+    fetch('./build-info.json')
+      .then(res => res.json())
+      .then(info => {
+        if (info.buildTime) document.getElementById('buildTime').innerText = new Date(info.buildTime).toLocaleString();
+        if (info.commitSha) document.getElementById('commitSha').innerText = info.commitSha.substring(0, 7);
+        if (info.branch) document.getElementById('branchName').innerText = info.branch;
+      })
+      .catch(() => {
+        document.getElementById('buildTime').innerText = new Date().toLocaleString();
+      });
+  </script>
+
+</body>
+</html>
