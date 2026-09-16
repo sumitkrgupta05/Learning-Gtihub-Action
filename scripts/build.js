@@ -37,6 +37,11 @@ if (fs.existsSync(docsHtml)) {
   fs.copyFileSync(docsHtml, path.join(distDir, "guide.html"));
 }
 
+const walkthroughHtml = path.join(__dirname, "..", "docs", "complete-walkthrough.html");
+if (fs.existsSync(walkthroughHtml)) {
+  fs.copyFileSync(walkthroughHtml, path.join(distDir, "walkthrough.html"));
+}
+
 console.log("✅ Build completed successfully!");
 console.log(`📦 Artifacts generated in: ${distDir}`);
 console.log(`⏱️ Build timestamp: ${buildInfo.buildTime}`);
