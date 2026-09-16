@@ -1,0 +1,13 @@
+{
+  "name": "github-actions-demo",
+  "version": "1.0.0",
+  "description": "A simple Node.js project to learn GitHub Actions",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "keywords": ["github-actions", "ci", "node"],
+  "author": "",
+  "license": "ISC"
+}
